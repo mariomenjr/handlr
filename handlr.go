@@ -19,11 +19,11 @@ type Handlr struct {
 // Registers Routers and ListenAndServer over Handlr.mux
 func (h *Handlr) Start(portNumber int) error {
 	h.router.regiterRoutesAndHandler(h.mux)
-	return h.ListenAndServe(portNumber)
+	return h.listenAndServe(portNumber)
 }
 
 // ListenAndServer over Handlr.mux
-func (h *Handlr) ListenAndServe(portNumber int) error {
+func (h *Handlr) listenAndServe(portNumber int) error {
 	portString := fmt.Sprintf(":%d", portNumber)
 
 	fmt.Printf("> Server started on port %s", portString)

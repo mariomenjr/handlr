@@ -22,5 +22,6 @@ go.work
 
 # Custom
 # Dev. Easily test implement package for development purposes
+.dev/*
 .dev/*.*
 !.dev/README.md
