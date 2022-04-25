@@ -18,7 +18,8 @@ type Handlr struct {
 
 // Registers Routers and ListenAndServer over Handlr.mux
 func (h *Handlr) Start(portNumber int) error {
-	h.router.regiterRoutesAndHandler(h.mux)
+	h.mux.Handle("/", &h.router) // Binds mux to routes
+
 	return h.listenAndServe(portNumber)
 }
 
