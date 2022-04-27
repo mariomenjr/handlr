@@ -59,8 +59,10 @@ func (rt *Router) findHandler(r *http.Request) *ActionHandler {
 	for _, v := range rt.children {
 		if v.handler != nil && v.isMatch(r) {
 			return v.handler
-		} else {
-			return v.findHandler(r)
+		}
+		x := v.findHandler(r)
+		if x != nil {
+			return x
 		}
 	}
 	return nil
