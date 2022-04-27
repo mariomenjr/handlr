@@ -57,15 +57,11 @@ func (rt *Router) buildPath() string {
 // Recursively find a handler to the request
 func (rt *Router) findHandler(r *http.Request) *ActionHandler {
 	for _, v := range rt.children {
-		if v.handler == nil {
-			continue
-		}
-
-		if v.isMatch(r) {
+		if v.handler != nil && v.isMatch(r) {
 			return v.handler
+		} else {
+			return v.findHandler(r)
 		}
-
-		v.findHandler(r)
 	}
 	return nil
 }
