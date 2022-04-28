@@ -6,11 +6,19 @@ import (
 	"testing"
 )
 
+type unitTests struct {
+	r  *http.Request
+	w  *httptest.ResponseRecorder
+	m  string
+	rt func()
+	fh func() *ActionHandler
+}
+
 func TestRegisterRoute(t *testing.T) {
 	h := New()
 
 	h.Route("/", func(r *Router) {
-		t.Log("Route registered correctly.")
+		t.Logf("Route registered correctly.")
 	})
 }
 
@@ -21,10 +29,11 @@ func TestRegisterHandler(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	h.Handler("/", func(w http.ResponseWriter, r *http.Request) {
-		t.Log("Handler registered correctly.")
+		t.Logf("Handler for %s registered correctly.", r.URL.Path)
 	})
 
-	(*h.router.children[0].handler)(w, r)
+	h.mux.Handle("/", &h.router)
+	h.mux.ServeHTTP(w, r)
 }
 
 func TestBuildPath(t *testing.T) {
@@ -33,9 +42,9 @@ func TestBuildPath(t *testing.T) {
 	f := func(bp string, rp string) bool {
 		pass := bp == rp
 		if pass {
-			t.Log(bp)
+			t.Logf(bp)
 		} else {
-			t.Errorf("Wrong path built: %s should've been %s.", bp, rp)
+			t.Fatalf("Wrong path built: %s should've been %s.", bp, rp)
 		}
 		return pass
 	}
@@ -45,7 +54,7 @@ func TestBuildPath(t *testing.T) {
 			r2.Route("c", func(r3 *Router) {
 				r3.Route("/", func(r4 *Router) {
 					if f(r4.buildPath(), "/a/b/c") && f(r3.buildPath(), "/a/b/c") && f(r2.buildPath(), "/a/b") && f(r1.buildPath(), "/a") {
-						t.Log("Paths generated correctly.")
+						t.Logf("Paths generated correctly.")
 					}
 				})
 			})
@@ -53,50 +62,62 @@ func TestBuildPath(t *testing.T) {
 	})
 }
 
-// TODO: Simplify
 func TestFindHandler(t *testing.T) {
 	h := New()
 
-	r := httptest.NewRequest(http.MethodGet, "/a/b", nil)
-	w := httptest.NewRecorder()
+	tests := []unitTests{
+		{
+			r: httptest.NewRequest(http.MethodGet, "/a/b", nil),
+			w: httptest.NewRecorder(),
+			m: "Handler matched correctly.",
+			rt: func() {
+				h.Route("/", func(r1 *Router) {
+					r1.Route("/a", func(r2 *Router) {
+						r2.Handler("/b", func(w http.ResponseWriter, r *http.Request) {
+							t.Logf("Handler for %s matched correctly.", r.URL.Path)
+						})
+					})
+				})
+			},
+			fh: func() *ActionHandler {
+				e := len(h.router.children) - 1                         // For /
+				a := len(h.router.children[e].children) - 1             // For /a
+				b := len(h.router.children[e].children[a].children) - 1 // For /b
 
-	// Complicated registration
-
-	h.Route("/", func(r1 *Router) {
-		r1.Route("/a", func(r2 *Router) {
-			r2.Handler("/b", func(w http.ResponseWriter, r *http.Request) {
-				t.Log("Handler matched correctly.")
-			})
-		})
-	})
-
-	e := len(h.router.children) - 1                         // For /
-	a := len(h.router.children[e].children) - 1             // For /a
-	b := len(h.router.children[e].children[a].children) - 1 // For /b
-
-	rh1 := h.router.children[e].children[a].children[b].handler
-	fh1 := h.router.findHandler(r)
-
-	if fh1 == rh1 {
-		h.mux.ServeHTTP(w, r)
-	} else {
-		t.Errorf("Handler couldn't be found: %d != %d", fh1, rh1)
+				return h.router.children[e].children[a].children[b].handler
+			},
+		},
+		{
+			r: httptest.NewRequest(http.MethodGet, "/x/y/z", nil),
+			w: httptest.NewRecorder(),
+			m: "Handler matched correctly.",
+			rt: func() {
+				h.Handler("/x/y/z", func(w http.ResponseWriter, r *http.Request) {
+					t.Logf("Handler for %s matched correctly.", r.URL.Path)
+				})
+			},
+			fh: func() *ActionHandler {
+				return h.router.children[1].handler
+			},
+		},
 	}
 
-	// Simple registration
+	h.mux.Handle("/", &h.router)
 
-	r = httptest.NewRequest(http.MethodGet, "/x/y/z", nil)
+	for i := 0; i < len(tests); i++ {
+		u := tests[i]
 
-	h.Handler("/x/y/z", func(w http.ResponseWriter, r *http.Request) {
-		t.Log("Handler matched correctly.")
-	})
+		u.rt()
 
-	rh2 := h.router.children[1].handler
-	fh2 := h.router.findHandler(r)
+		fh := u.fh()
+		rh := h.router.findHandler(u.r)
 
-	if fh2 == rh2 {
-		h.mux.ServeHTTP(w, r)
-	} else {
-		t.Errorf("Handler couldn't be found: %d != %d", fh2, rh2)
+		if rh == fh {
+			h.mux.ServeHTTP(u.w, u.r)
+		} else {
+			t.Fatalf("Handler couldn't be found: %d != %d", fh, rh)
+		}
 	}
+
+	t.Logf("Handlers found without problems.")
 }
