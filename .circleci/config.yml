@@ -16,7 +16,7 @@ jobs:
     steps:
       - checkout
       - run: go version
-      - run: go mod download
+      - run: go get -u ./
       - run: go test -v
 
 # Invoke jobs via workflows
