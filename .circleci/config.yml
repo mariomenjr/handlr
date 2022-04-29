@@ -16,8 +16,7 @@ jobs:
     steps:
       - checkout
       - run: go version
-      - run: pwd
-      - run: go get -u ./..
+      # - run: go get -u . // Since I am not installing any external package, I don't need this
       - run: go test -v
 
 # Invoke jobs via workflows
