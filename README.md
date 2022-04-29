@@ -27,9 +27,11 @@ You can register paths and handlers directly:
 // main.go
 
 func main() {
-  h := handlr.New()
+	h := handlr.New()
 
-  h.Handler("/feed", feedHandler)
+	h.Handler("/feed", feedHandler)
+
+	r.Start(1993)
 }
 
 func feedHandler(w http.ResponseWriter, r *http.Request) {
@@ -55,6 +57,8 @@ func main() {
 
 	h.Route("/feed", feedRoute)
 	h.Route("/account", accountRoute)
+	
+	r.Start(1993)
 }
 ```
 
