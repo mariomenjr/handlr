@@ -17,7 +17,7 @@ type unitTests struct {
 func TestRegisterRoute(t *testing.T) {
 	h := New()
 
-	h.Route("/", func(r *Router) {
+	h.RouteFunc("/", func(r *Router) {
 		t.Logf("Route registered correctly.")
 	})
 }
@@ -28,7 +28,7 @@ func TestRegisterHandler(t *testing.T) {
 	r := httptest.NewRequest(http.MethodGet, "/", nil)
 	w := httptest.NewRecorder()
 
-	h.Handler("/", func(w http.ResponseWriter, r *http.Request) {
+	h.HandlerFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		t.Logf("Handler for %s registered correctly.", r.URL.Path)
 	})
 
@@ -49,10 +49,10 @@ func TestBuildPath(t *testing.T) {
 		return pass
 	}
 
-	h.Route("a", func(r1 *Router) {
-		r1.Route("b", func(r2 *Router) {
-			r2.Route("c", func(r3 *Router) {
-				r3.Route("/", func(r4 *Router) {
+	h.RouteFunc("a", func(r1 *Router) {
+		r1.RouteFunc("b", func(r2 *Router) {
+			r2.RouteFunc("c", func(r3 *Router) {
+				r3.RouteFunc("/", func(r4 *Router) {
 					if f(r4.buildPath(), "/a/b/c") && f(r3.buildPath(), "/a/b/c") && f(r2.buildPath(), "/a/b") && f(r1.buildPath(), "/a") {
 						t.Logf("Paths generated correctly.")
 					}
@@ -71,9 +71,9 @@ func TestFindHandler(t *testing.T) {
 			w: httptest.NewRecorder(),
 			m: "Handler matched correctly.",
 			rt: func() {
-				h.Route("/", func(r1 *Router) {
-					r1.Route("/a", func(r2 *Router) {
-						r2.Handler("/b", func(w http.ResponseWriter, r *http.Request) {
+				h.RouteFunc("/", func(r1 *Router) {
+					r1.RouteFunc("/a", func(r2 *Router) {
+						r2.HandlerFunc("/b", func(w http.ResponseWriter, r *http.Request) {
 							t.Logf("Handler for %s matched correctly.", r.URL.Path)
 						})
 					})
@@ -92,7 +92,7 @@ func TestFindHandler(t *testing.T) {
 			w: httptest.NewRecorder(),
 			m: "Handler matched correctly.",
 			rt: func() {
-				h.Handler("/x/y/z", func(w http.ResponseWriter, r *http.Request) {
+				h.HandlerFunc("/x/y/z", func(w http.ResponseWriter, r *http.Request) {
 					t.Logf("Handler for %s matched correctly.", r.URL.Path)
 				})
 			},

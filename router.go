@@ -18,20 +18,20 @@ type Router struct {
 	handler  *ActionHandler
 }
 
-// Allows Route registration.
+// Allows RouteFunc registration.
 // You don't program behavior through this method.
-func (rt *Router) Route(path string, routeHandler RouteHandler) {
+func (rt *Router) RouteFunc(path string, routeHandler RouteHandler) {
 	router := &Router{path: path, parent: rt}
 	routeHandler(router)
 
 	rt.children = append(rt.children, router)
 }
 
-// Allows Handler registration which gives you the ability
+// Allows HandlerFunc registration which gives you the ability
 // to tie a behavior to a path.
 // i.e. Get a record from database by hiting URL:
 // 			http://example.org/get/record?id=1
-func (rt *Router) Handler(path string, actionHandler ActionHandler) {
+func (rt *Router) HandlerFunc(path string, actionHandler ActionHandler) {
 	router := &Router{path: path, parent: rt, handler: &actionHandler}
 
 	rt.children = append(rt.children, router)
