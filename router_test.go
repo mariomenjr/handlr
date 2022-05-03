@@ -11,7 +11,7 @@ type unitTests struct {
 	w  *httptest.ResponseRecorder
 	m  string
 	rt func()
-	fh func() *ActionHandler
+	fh func() *ActionHandlerFunc
 }
 
 func TestRegisterRoute(t *testing.T) {
@@ -28,7 +28,7 @@ func TestRegisterHandler(t *testing.T) {
 	r := httptest.NewRequest(http.MethodGet, "/", nil)
 	w := httptest.NewRecorder()
 
-	h.HandlerFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	h.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		t.Logf("Handler for %s registered correctly.", r.URL.Path)
 	})
 
@@ -73,13 +73,13 @@ func TestFindHandler(t *testing.T) {
 			rt: func() {
 				h.RouteFunc("/", func(r1 *Router) {
 					r1.RouteFunc("/a", func(r2 *Router) {
-						r2.HandlerFunc("/b", func(w http.ResponseWriter, r *http.Request) {
+						r2.HandleFunc("/b", func(w http.ResponseWriter, r *http.Request) {
 							t.Logf("Handler for %s matched correctly.", r.URL.Path)
 						})
 					})
 				})
 			},
-			fh: func() *ActionHandler {
+			fh: func() *ActionHandlerFunc {
 				e := len(h.router.children) - 1                         // For /
 				a := len(h.router.children[e].children) - 1             // For /a
 				b := len(h.router.children[e].children[a].children) - 1 // For /b
@@ -92,11 +92,11 @@ func TestFindHandler(t *testing.T) {
 			w: httptest.NewRecorder(),
 			m: "Handler matched correctly.",
 			rt: func() {
-				h.HandlerFunc("/x/y/z", func(w http.ResponseWriter, r *http.Request) {
+				h.HandleFunc("/x/y/z", func(w http.ResponseWriter, r *http.Request) {
 					t.Logf("Handler for %s matched correctly.", r.URL.Path)
 				})
 			},
-			fh: func() *ActionHandler {
+			fh: func() *ActionHandlerFunc {
 				return h.router.children[1].handler
 			},
 		},

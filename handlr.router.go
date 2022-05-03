@@ -1,11 +1,11 @@
 package handlr
 
 // Aliases the RouteFunc method from Handlr.Router to Handlr.
-func (h *Handlr) RouteFunc(path string, routeHandler RouteHandler) {
+func (h *Handlr) RouteFunc(path string, routeHandler RouteHandlerFunc) {
 	h.router.RouteFunc(path, routeHandler)
 }
 
-// Aliases the HandlerFunc method from Handlr.Router to Handlr.
-func (h *Handlr) HandlerFunc(path string, actionHandler ActionHandler) {
-	h.router.HandlerFunc(path, actionHandler)
+// Aliases the HandleFunc method from Handlr.Router to Handlr.
+func (h *Handlr) HandleFunc(path string, actionHandler ActionHandlerFunc) {
+	h.router.HandleFunc(path, actionHandler)
 }

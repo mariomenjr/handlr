@@ -15,24 +15,32 @@ type Router struct {
 	path     string
 	parent   *Router
 	children []*Router
-	handler  *ActionHandler
+	handler  *ActionHandlerFunc
+}
+
+func (rt *Router) Route(path string, routeHandler RouteHandler) {
+	rt.RouteFunc(path, routeHandler.RouteHTTP)
 }
 
 // Allows RouteFunc registration.
 // You don't program behavior through this method.
-func (rt *Router) RouteFunc(path string, routeHandler RouteHandler) {
+func (rt *Router) RouteFunc(path string, routeHandlerFunc RouteHandlerFunc) {
 	router := &Router{path: path, parent: rt}
-	routeHandler(router)
+	routeHandlerFunc(router)
 
 	rt.children = append(rt.children, router)
+}
+
+func (rt *Router) Handle(path string, actionHandler http.Handler) {
+	rt.HandleFunc(path, actionHandler.ServeHTTP)
 }
 
 // Allows HandlerFunc registration which gives you the ability
 // to tie a behavior to a path.
 // i.e. Get a record from database by hiting URL:
-// 			http://example.org/get/record?id=1
-func (rt *Router) HandlerFunc(path string, actionHandler ActionHandler) {
-	router := &Router{path: path, parent: rt, handler: &actionHandler}
+// 			http://example.org/get/record/1
+func (rt *Router) HandleFunc(path string, actionHandlerFunc ActionHandlerFunc) {
+	router := &Router{path: path, parent: rt, handler: &actionHandlerFunc}
 
 	rt.children = append(rt.children, router)
 }
@@ -55,7 +63,7 @@ func (rt *Router) buildPath() string {
 }
 
 // Recursively find a handler to the request
-func (rt *Router) findHandler(r *http.Request) *ActionHandler {
+func (rt *Router) findHandler(r *http.Request) *ActionHandlerFunc {
 	for _, v := range rt.children {
 		if v.handler != nil && v.isMatch(r) {
 			return v.handler
