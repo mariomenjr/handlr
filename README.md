@@ -29,7 +29,7 @@ You can register paths and handlers directly:
 func main() {
 	h := handlr.New()
 
-	h.Handler("/feed", feedHandler)
+	h.HandleFunc("/feed", feedHandler)
 
 	r.Start(1993)
 }
@@ -55,8 +55,8 @@ You can also register `Route`s which allow you to organize your handlers (or eve
 func main() {
 	h := handlr.New()
 
-	h.Route("/feed", feedRoute)
-	h.Route("/account", accountRoute)
+	h.RouteFunc("/feed", feedRoute)
+	h.RouteFunc("/account", accountRoute)
 	
 	r.Start(1993)
 }
@@ -66,9 +66,9 @@ func main() {
 // feed.route.go
 
 func feedRoute(r *handlr.Router) {
-	r.Handler("/latest", latestHandler)
+	r.HandleFunc("/latest", latestHandler)
 
-	r.Route("/custom", feedCustomRoute)
+	r.RouteFunc("/custom", feedCustomRoute)
 }
 
 func latestHandler(w http.ResponseWriter, r *http.Request) {
@@ -76,7 +76,7 @@ func latestHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func feedCustomRoute(r *handlr.Router) {
-	r.Handler("/monthly", feedCustomMonthlyHandler)
+	r.HandleFunc("/monthly", feedCustomMonthlyHandler)
 }
 
 func feedCustomMonthlyHandler(w http.ResponseWriter, r *http.Request) {
@@ -88,8 +88,8 @@ func feedCustomMonthlyHandler(w http.ResponseWriter, r *http.Request) {
 // account.route.go
 
 func accountRoute(r *handlr.Router) {
-	r.Handler("/profile", accountProfileHandlr)
-	r.Handler("/settings", accountSettingsHandlr)
+	r.HandleFunc("/profile", accountProfileHandlr)
+	r.HandleFunc("/settings", accountSettingsHandlr)
 }
 
 func accountProfileHandlr(w http.ResponseWriter, r *http.Request) {
